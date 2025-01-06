@@ -1,14 +1,149 @@
-"use client";
-
 // COMPONENTS
-import { Field, Label, Input, Checkbox } from "@headlessui/react";
-import { MdOutlineCheck, MdOutlineError } from "react-icons/md";
+import {
+  Field,
+  Label,
+  Input,
+  Checkbox,
+  Button,
+  RadioGroup,
+  Radio,
+} from "@headlessui/react";
 import { FaRegQuestionCircle } from "react-icons/fa";
+import {
+  MdOutlineAdd,
+  MdOutlineRemove,
+  MdOutlineDelete,
+  MdOutlineError,
+  MdOutlineCheck,
+} from "react-icons/md";
 
 // FUNCTIONS
-import { redirect } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect } from "react";
 
+// NUMBER SPINNER
+export function QuantitySelector({ data, children }) {
+  return (
+    <Field className="peer grid grid-cols-1 sm:grid-cols-[1fr_auto_1rem] items-end justify-between gap-2 sm:gap-4">
+      <Label className="body-copy flex justify-between">
+        {children}
+        <span className="body-copy opacity-50 place-self-end mx-8">
+          {data.price} DKK
+        </span>
+      </Label>
+      <Spinner
+        // forTickets
+        {...data}
+      />
+    </Field>
+  );
+}
+
+function Spinner({
+  name,
+  label,
+  error,
+  single,
+  currentTotal,
+  setTotal,
+  overallTotal,
+}) {
+  const [quantity, setQuantity] = useState(currentTotal);
+
+  useEffect(() => {
+    setTotal(quantity);
+  }, [quantity]);
+
+  return (
+    <>
+      <div
+        className={`input-field input-field-number--focus flex justify-between gap-4 w-fit ${
+          ((error?.includes("select") && overallTotal < 1) ||
+            (error?.includes("limit") && currentTotal > 10) ||
+            error?.tentSetup) &&
+          "not-has-data-focus:border-border-global--error bg-surface-input--focus"
+        }`}
+      >
+        <Button
+          disabled={!quantity}
+          className="data-disabled:opacity-25 not-data-disabled:cursor-pointer"
+          onClick={() => setQuantity(Number(quantity) - 1)}
+        >
+          <MdOutlineRemove className="text-text-global" size="24" />
+        </Button>
+        <Input
+          type="number"
+          name={name}
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          className="body-copy w-6 text-center data-focus:outline-none data-disabled:text-text-global/15"
+          disabled={label.includes("Triple") && single}
+        />
+        <Button
+          disabled={
+            label.includes("Double") && single
+              ? quantity >= 1
+              : label.includes("Triple") && single
+              ? quantity >= 0
+              : quantity >= 10
+          }
+          className="data-disabled:opacity-25 not-data-disabled:cursor-pointer"
+          onClick={() => setQuantity(Number(quantity) + 1)}
+        >
+          <MdOutlineAdd className="text-text-global" size="24" />
+        </Button>
+      </div>
+      {quantity > 0 && (
+        <Button
+          className="cursor-pointer"
+          aria-label="Clear quantity"
+          onClick={() => setQuantity(0)}
+        >
+          <MdOutlineDelete
+            className="hover:opacity-50 opacity-25 place-self-center hidden md:block"
+            size="24"
+          />
+        </Button>
+      )}
+      {error && overallTotal < 1 && (
+        <MdOutlineError
+          aria-label="Attention!"
+          className="place-self-center text-text-global--error error_icon"
+          size="24"
+        />
+      )}
+    </>
+  );
+}
+
+// RADIO GROUP
+export function RadioSelector({ data, selected, setSelected }) {
+  return (
+    <RadioGroup name="area" value={selected} onChange={setSelected}>
+      {data.map((option, id) => (
+        <Field
+          key={id}
+          disabled={option.disabled}
+          className="flex items-end justify-between max-w-xl gap-6 md:gap-8 not-data-disabled:cursor-pointer"
+        >
+          <Radio
+            value={option.label}
+            className="group grid grid-cols-[auto_8rem_4rem] gap-3 items-center"
+          >
+            <span className="input-radio" />
+            <Label className="body-copy group-data-disabled:opacity-25 group-not-data-disabled:cursor-pointer">
+              {option.label}
+            </Label>
+            <small className="body-copy-small opacity-25 cursor-default justify-self-end">
+              {option.details}
+            </small>
+          </Radio>
+        </Field>
+      ))}
+    </RadioGroup>
+  );
+}
+
+// CHECKBOX
 export function CheckField({ data, minor, children }) {
   const [checked, setChecked] = useState(false);
 
@@ -38,6 +173,7 @@ export function CheckField({ data, minor, children }) {
   );
 }
 
+// TEXT INPUT
 export function TextInput({
   name,
   type,
@@ -97,53 +233,7 @@ export function TextInput({
   );
 }
 
-export function ReservationTimer() {
-  return (
-    <div className="flex justify-between gap-2 items-center bg-surface-action py-2 px-4">
-      <small className="body-copy-small leading-tight">
-        Time to complete reservation
-      </small>
-      <CountDown seconds={60 * 5} />
-    </div>
-  );
-}
-
-export function CountDown({ seconds }) {
-  const [countdown, setCountdown] = useState(seconds);
-  const timerID = useRef();
-
-  useEffect(() => {
-    timerID.current = setInterval(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timerID.current);
-  }, []);
-
-  useEffect(() => {
-    if (countdown <= 1) {
-      clearInterval(timerID);
-      redirect("/session/timeout");
-    }
-  }, [countdown]);
-  // COUNTDOWN FUNCTION CREDIT: https://youtu.be/4_9yJXO4F2Y
-
-  const formattedTimer =
-    new Date(countdown * 1000).getUTCMinutes().toLocaleString("en-US", {
-      minimumIntegerDigits: 2,
-      maximumFractionDigits: 0,
-      useGrouping: false,
-    }) +
-    ":" +
-    new Date(countdown * 1000).getSeconds().toLocaleString("en-US", {
-      minimumIntegerDigits: 2,
-      maximumFractionDigits: 0,
-      useGrouping: false,
-    });
-  // TIME FORMAT CREDIT: https://www.geeksforgeeks.org/how-to-convert-seconds-to-time-string-format-hhmmss-using-javascript/
-
-  return <p className="body-copy font-semibold">{formattedTimer}</p>;
-}
-
+// ERROR TEXT
 export function ErrorText({ retainHeight, children }) {
   return (
     <small

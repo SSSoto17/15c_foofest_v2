@@ -4,6 +4,66 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { putReservation, postReservation, postOrder } from "@/lib/order";
 
+export async function submitTickets(prev, formData) {
+  const reservationData = {};
+  const orderData = {};
+  const errors = {};
+  const ticketDetails = {};
+
+  // COLLECT RESERVATION
+  reservationData.area = formData.get("area");
+
+  reservationData.amount =
+    Number(formData.get("partout")) + Number(formData.get("vip"));
+
+  // COLLECT ORDER
+  // ticketDetails.partout = Array(Number(formData.get("partout"))).fill({});
+  const partoutTicket = new Map();
+  partoutTicket.set("name", "");
+  partoutTicket.set("email", "");
+  ticketDetails.partout = Array(Number(formData.get("partout"))).fill(
+    partoutTicket
+  );
+  const vipTicket = new Map();
+  vipTicket.set("name", "");
+  vipTicket.set("email", "");
+  ticketDetails.vip = Array(Number(formData.get("vip"))).fill(vipTicket);
+  // orderDetails.vip = Array(Number(formData.get("vip"))).fill("vip");
+  // orderDetails.campingArea = data.area;
+
+  // FORM VALIDATION
+  if (!reservationData.amount || reservationData.amount < 1) {
+    errors.tooFewTickets = "Please select your tickets.";
+  }
+
+  if (ticketDetails.partout.length > 10 || ticketDetails.vip.length > 10) {
+    errors.tooManyTickets = "Please limit your selection to 10 tickets.";
+  }
+  if (errors.tooFewTickets || errors.tooManyTickets) {
+    // return { activeStep: prev.activeStep, success: false, errors };
+    return { success: false, errors };
+  }
+
+  // PUT RESERVATION
+  const response = await putReservation(reservationData);
+  if (response) {
+    orderData.campingArea = reservationData.area;
+    orderData.greenFee = Boolean(formData.get("greenFee"));
+    orderData.reservationId = response.id;
+    await postOrder(orderData);
+    revalidatePath("/");
+    return {
+      activeStep: 2,
+      success: true,
+      errors: {},
+      orderData,
+      ticketDetails,
+    };
+  } else {
+    return { success: false, errors: {} };
+  }
+}
+
 export async function submitTicketReservation(prev, formData) {
   const errors = {};
   const orderDetails = {};

@@ -1,22 +1,6 @@
-import {
-  GreenFee,
-  TentSetup,
-  EnterBuyerInfo,
-  EnterPaymentInfo,
-} from "./FormSections";
-import SelectTickets from "./form-sections/SelectTickets";
-import SelectCampingArea from "./form-sections/SelectCampingArea";
-import EnterGuestInfo from "./form-sections/GuestInfo";
+import { TentSetup, EnterBuyerInfo, EnterPaymentInfo } from "./FormSections";
 
-export function BookingStepOne({ ticketData, error, areaData }) {
-  return (
-    <div className="grid gap-y-10 sm:gap-y-16 p-8 sm:p-12">
-      <SelectTickets {...ticketData} error={error} />
-      <SelectCampingArea data={areaData} />
-      <GreenFee />
-    </div>
-  );
-}
+import EnterGuestInfo from "./form-sections/GuestInfo";
 
 export function BookingStepTwo({ orderData, error }) {
   return (
