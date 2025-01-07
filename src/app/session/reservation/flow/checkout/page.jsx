@@ -2,7 +2,7 @@ import BookingWindow from "@/components/checkout/BookingWindow";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import ReservationTimer from "@/components/checkout/ReservationTimer";
 import Button from "@/components/Button";
-import formSteps from "@/data/formSteps";
+import formSteps from "@/data/formsteps";
 
 export default function Page() {
   return (
