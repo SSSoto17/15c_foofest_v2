@@ -1,4 +1,4 @@
-const endpoint = process.env.FOO_FEST_API_URL;
+const endpoint = process.env.NEXT_PUBLIC_FOO_FEST_API_URL;
 
 export async function getArtists() {
   const response = await fetch(`${endpoint}/bands`, {
