@@ -4,14 +4,12 @@ import { MdOutlineArrowBack } from "react-icons/md";
 import { getArtistBySlug } from "@/lib/lineup";
 
 import picture from "@/assets/tester/terminalist.jpg";
-const endpoint = process.env.FOO_FEST_API_URL;
+const endpoint = process.env.NEXT_PUBLIC_FOO_FEST_API_URL;
 
 export default async function ArtistSingle({ params }) {
   const slug = await params;
   const artist = await getArtistBySlug(slug.slug);
-  const artistImg = artist.logo.startsWith("https://")
-    ? artist.logo
-    : `${endpoint}/logos/${artist.logo}`;
+  const artistImg = artist.logo.startsWith("https://") ? artist.logo : `${endpoint}/logos/${artist.logo}`;
 
   return (
     <main>
@@ -26,16 +24,8 @@ export default async function ArtistSingle({ params }) {
 
       <section className="grid md:grid-cols-2 gap-10">
         <div>
-          <Image
-            src={artistImg}
-            alt={`Image of ${artist.name}`}
-            placeholder="blur"
-          ></Image>
-          {artist.logoCredits && (
-            <small className="mt-2 inline-block body-copy-small">
-              Photo by Johan von Bülow
-            </small>
-          )}
+          <Image src={picture} alt={`Image of ${artist.name}`} width={400} height={400} className="h-full w-full object-cover"></Image>
+          {artist.logoCredits && <small className="mt-2 inline-block body-copy-small">Photo by Johan von Bülow</small>}
         </div>
         <article className="">
           <h1 className="heading-tagline px-4 py-2 border-2 inline-block">
