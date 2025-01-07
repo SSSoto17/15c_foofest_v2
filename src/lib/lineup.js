@@ -1,4 +1,3 @@
-// const endpoint = process.env.FOO_FEST_API_URL;
 import { endpointAPI } from "./endpoints";
 
 export async function getArtists() {
