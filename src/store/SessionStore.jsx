@@ -3,14 +3,21 @@ import { useShallow } from "zustand/react/shallow";
 
 // CURRENT RESERVATION IN SESSION
 const useSessionStore = create((set) => ({
+  activeStep: 1,
   reservationId: "",
-  setReservationId: (id) => set(() => ({ reservationId: id })),
+  actions: {
+    setActiveStep: (step) => set(() => ({ activeStep: step })),
+    setReservationId: (id) => set(() => ({ reservationId: id })),
+  },
 }));
 
 export const useSession = () =>
   useSessionStore(
     useShallow((state) => ({
+      activeStep: state.activeStep,
       reservationId: state.reservationId,
-      setReservationId: state.setReservationId,
     }))
   );
+
+export const useSessionActions = () =>
+  useSessionStore((state) => state.actions);

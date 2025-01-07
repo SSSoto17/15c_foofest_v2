@@ -1,41 +1,38 @@
 "use client";
 
+import { useOrder } from "@/store/orderStore";
 import ReservationTimer from "./ReservationTimer";
+import { useTickets } from "@/store/TicketStore";
+import { useTents } from "@/store/TentStore";
+import { orderTotal } from "@/lib/utils";
+import { useSession } from "@/store/SessionStore";
 
-export default function OrderSummary({
-  step,
-  partoutGuests,
-  vipGuests,
-  tentDouble,
-  tentTriple,
-  greenFee,
-}) {
-  const green = greenFee ? 249 : 0;
-  const partoutPrice = partoutGuests ? partoutGuests.length * 799 : 0;
-  const vipPrice = vipGuests ? vipGuests.length * 1299 : 0;
-  const totalPrice = partoutPrice + vipPrice + green + 99;
+export default function OrderSummary() {
+  const { orderData } = useOrder();
+  const tickets = useTickets();
+  const tents = useTents();
+  const { activeStep } = useSession();
+
+  const priceTotal = orderTotal(
+    tickets.partoutTickets,
+    tickets.vipTickets,
+    tents.doubleTents,
+    tents.tripleTents,
+    orderData?.green_fee
+  );
 
   const styles = `md:grid border border-border-form self-start grid-rows-subgrid row-span-full ${
-    step === 3 ? "grid" : "hidden"
+    activeStep === 3 ? "grid" : "hidden"
   }`;
 
   return (
     <section className={styles}>
       <OrderHeader />
-      <OrderOverview
-        step={step}
-        partoutGuests={partoutGuests}
-        vipGuests={vipGuests}
-      >
-        <ItemBasket
-          partoutGuests={partoutGuests}
-          vipGuests={vipGuests}
-          tentDouble={tentDouble}
-          tentTriple={tentTriple}
-        />
-        <FeesBasket greenFee={greenFee} />
+      <OrderOverview {...tickets}>
+        <ItemBasket {...tickets} {...tents} />
+        <FeesBasket greenFee={orderData?.green_fee} />
       </OrderOverview>
-      <OrderTotal totalPrice={totalPrice} />
+      <OrderTotal total={priceTotal} />
     </section>
   );
 }
@@ -50,17 +47,18 @@ function OrderHeader() {
   );
 }
 
-function OrderOverview({ step, partoutGuests, vipGuests, children }) {
+function OrderOverview({ partoutTickets, vipTickets, children }) {
+  const { activeStep } = useSession();
   return (
     <article
       className={`grid grid-rows-[auto_1fr] ${
-        step !== 1 && "grid-rows-[auto_auto_1fr]"
+        activeStep !== 1 && "grid-rows-[auto_auto_1fr]"
       } gap-y-2`}
     >
-      <div className={step === 3 && "hidden sm:block"}>
-        {step !== 1 && <ReservationTimer />}
+      <div className={activeStep === 3 ? "hidden sm:block" : undefined}>
+        {activeStep !== 1 && <ReservationTimer />}
       </div>
-      {!partoutGuests && !vipGuests && (
+      {!partoutTickets && !vipTickets && (
         <small className="body-copy-small p-6 text-center italic opacity-50">
           No tickets selected.
         </small>
@@ -70,60 +68,49 @@ function OrderOverview({ step, partoutGuests, vipGuests, children }) {
   );
 }
 
-function OrderTotal({ totalPrice }) {
+function OrderTotal({ total }) {
   return (
     <footer className="flex justify-between gap-4 p-6 items-center border-t border-border-global font-bold">
       <p className="body-copy font-bold uppercase tracking-wider">Total</p>
-      <p className="body-copy font-semibold">{totalPrice},-</p>
+      <p className="body-copy font-semibold">{total},-</p>
     </footer>
   );
 }
 
-function ItemBasket({ partoutGuests, vipGuests, tentDouble, tentTriple }) {
+function ItemBasket({ partoutTickets, vipTickets, doubleTents, tripleTents }) {
   return (
     <ul className="p-6">
-      {partoutGuests?.length > 0 && (
-        <TicketItem quantity={partoutGuests?.length} price={799}>
-          Partout
-        </TicketItem>
+      {partoutTickets > 0 && (
+        <Item quantity={partoutTickets} price={799}>
+          Partout Ticket
+        </Item>
       )}
-      {vipGuests?.length > 0 && (
-        <TicketItem quantity={vipGuests?.length} price={1299}>
-          VIP
-        </TicketItem>
+      {vipTickets > 0 && (
+        <Item quantity={vipTickets} price={1299}>
+          VIP Ticket
+        </Item>
       )}
-      {tentDouble > 0 && (
-        <TentItem quantity={tentDouble / 2} price={299}>
-          Double Person
-        </TentItem>
+      {doubleTents > 0 && (
+        <Item quantity={doubleTents} price={299}>
+          Double Person Tent
+        </Item>
       )}
-      {tentTriple > 0 && (
-        <TentItem quantity={tentTriple / 3} price={399}>
-          Triple Person
-        </TentItem>
+      {tripleTents > 0 && (
+        <Item quantity={tripleTents} price={399}>
+          Triple Person Tent
+        </Item>
       )}
     </ul>
   );
 }
 
-function TicketItem({ quantity, price, children }) {
+function Item({ quantity, price, children }) {
   return (
     <li className="flex justify-between items-end gap-2">
       <p className="body-copy flex gap-2 items-end">
         <span className="body-copy-small">{quantity} x</span>
-        {children + quantity === 1 ? "Ticket" : "Tickets"}
-      </p>
-      <p className="body-copy">{quantity * price},-</p>
-    </li>
-  );
-}
-
-function TentItem({ quantity, price, children }) {
-  return (
-    <li className="flex justify-between items-end gap-2">
-      <p className="body-copy flex gap-2 items-end">
-        <span className="body-copy-small">{quantity} x</span>
-        {children + quantity === 1 ? "Tent" : "Tents"}
+        {children}
+        {quantity > 1 && "s"}
       </p>
       <p className="body-copy">{quantity * price},-</p>
     </li>

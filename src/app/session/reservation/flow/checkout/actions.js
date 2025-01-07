@@ -1,67 +1,201 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { putReservation, postReservation, postOrder } from "@/lib/order";
+import {
+  putReservation,
+  postReservation,
+  postOrder,
+  patchOrder,
+} from "@/lib/order";
+import { newGuest } from "@/lib/utils";
 
 export async function submitTickets(prev, formData) {
-  const reservationData = {};
-  const orderData = {};
-  const errors = {};
-  const ticketDetails = {};
+  // BOOKING FLOW || STEP ONE
+  if (prev.activeStep === 1) {
+    const stepOne = await submitStepOne(prev, formData);
+    revalidatePath("/");
+    return { activeStep: 2, ...stepOne };
+  }
 
-  // COLLECT RESERVATION
-  reservationData.area = formData.get("area");
+  // BOOKING FLOW || STEP TWO
+  if (prev.activeStep === 2) {
+    const stepTwo = await submitStepTwo(prev, formData);
+    revalidatePath("/");
+    return { activeStep: 3, ...stepTwo };
+  }
 
-  reservationData.amount =
-    Number(formData.get("partout")) + Number(formData.get("vip"));
+  // BOOKING FLOW || STEP THREE
+  if (prev.activeStep === 3) {
+    const stepThree = await submitStepThree(prev, formData);
+    return { ...stepThree };
+  }
+}
 
+// BOOKING FLOW || STEP ONE
+async function submitStepOne(prev, formData) {
   // COLLECT ORDER
-  // ticketDetails.partout = Array(Number(formData.get("partout"))).fill({});
-  const partoutTicket = new Map();
-  partoutTicket.set("name", "");
-  partoutTicket.set("email", "");
-  ticketDetails.partout = Array(Number(formData.get("partout"))).fill(
-    partoutTicket
-  );
-  const vipTicket = new Map();
-  vipTicket.set("name", "");
-  vipTicket.set("email", "");
-  ticketDetails.vip = Array(Number(formData.get("vip"))).fill(vipTicket);
-  // orderDetails.vip = Array(Number(formData.get("vip"))).fill("vip");
-  // orderDetails.campingArea = data.area;
+  const partoutQuantity = Number(formData.get("partout"));
+  const vipQuantity = Number(formData.get("vip"));
+
+  const partoutTickets = Array(partoutQuantity).fill({
+    name: "partoutName",
+    email: "partoutEmail",
+  });
+  const vipTickets = Array(vipQuantity).fill({
+    name: "vipName",
+    email: "vipEmail",
+    vip: true,
+  });
+
+  const tickets = [...partoutTickets, ...vipTickets];
+
+  // PREPARE RESERVATION
+  const reservationData = {};
+
+  reservationData.area = formData.get("area");
+  reservationData.amount = partoutQuantity + vipQuantity;
 
   // FORM VALIDATION
+  const errors = {};
+
   if (!reservationData.amount || reservationData.amount < 1) {
     errors.tooFewTickets = "Please select your tickets.";
   }
 
-  if (ticketDetails.partout.length > 10 || ticketDetails.vip.length > 10) {
+  if (partoutQuantity > 10 || vipQuantity > 10) {
     errors.tooManyTickets = "Please limit your selection to 10 tickets.";
   }
+
   if (errors.tooFewTickets || errors.tooManyTickets) {
-    // return { activeStep: prev.activeStep, success: false, errors };
-    return { success: false, errors };
+    return { activeStep: prev.activeStep, success: false, errors };
   }
 
   // PUT RESERVATION
   const response = await putReservation(reservationData);
   if (response) {
-    orderData.campingArea = reservationData.area;
-    orderData.greenFee = Boolean(formData.get("greenFee"));
-    orderData.reservationId = response.id;
+    const orderData = {};
+
+    orderData.camping_area = reservationData.area;
+    orderData.green_fee = Boolean(formData.get("greenFee"));
+    orderData.reservation_id = response.id;
+    orderData.paid = false;
+
     await postOrder(orderData);
-    revalidatePath("/");
+
     return {
-      activeStep: 2,
-      success: true,
+      success: false,
       errors: {},
       orderData,
-      ticketDetails,
+      tickets,
     };
   } else {
     return { success: false, errors: {} };
   }
+}
+
+// BOOKING FLOW || STEP TWO
+async function submitStepTwo(prev, formData) {
+  const errors = {};
+
+  // LINK GUESTS TO RESERVATION
+  const reservationId = prev.orderData.reservation_id;
+  // IS BUYER GUEST?
+  const isBuyer = formData.get("isBuyer");
+
+  // COLLECT GUEST DATA
+  const names = [
+    ...formData.getAll("partoutName"),
+    ...formData.getAll("vipName"),
+  ];
+  const emails = [
+    ...formData.getAll("partoutEmail"),
+    ...formData.getAll("vipEmail"),
+  ];
+  const vip = [
+    ...Array(formData.getAll("partoutName").length).fill(false),
+    ...Array(formData.getAll("vipName").length).fill(true),
+  ];
+
+  // COLLECT TENT ADDONS
+  const tentSpaces = {};
+
+  tentSpaces.double = formData.get("tentDouble") * 2;
+  tentSpaces.triple = formData.get("tentTriple") * 3;
+
+  // FORM VALIDATION
+
+  // POST TO GUESTS DATABASE
+  const { name, email } = newGuest(names, emails, vip, reservationId, isBuyer);
+
+  // POST TO RESERVATIONS DATABASE
+  const orderData = { ...prev.orderData, name, email };
+  console.log(orderData);
+  orderData.optional_tent_setup = {
+    tent_double: formData.get("tentDouble"),
+    tent_triple: formData.get("tentTriple"),
+  };
+
+  await patchOrder(orderData);
+
+  // NEXT STEP
+
+  return {
+    success: false,
+    errors: {},
+    orderData,
+  };
+}
+
+// BOOKING FLOW || STEP THREE
+async function submitStepThree(prev, formData) {
+  const orderData = { ...prev.orderData };
+
+  // COLLECT CUSTOMER DATA
+  orderData.name = formData.get("name");
+  orderData.email = formData.get("email");
+
+  // COLLECT PAYMENT
+  const cardDetails = {};
+
+  cardDetails.cardNumber = Boolean(formData.get("cardNumber"));
+  cardDetails.cardExp = Boolean(formData.get("cardExp"));
+  cardDetails.cardSec = Boolean(formData.get("cardSec"));
+  cardDetails.cardHolder = Boolean(formData.get("cardHolder"));
+
+  // FORM VALIDATION
+  const errors = {};
+
+  // if (!orderData.name) {
+  //   errors.name = "Please enter your name.";
+  // }
+
+  if (
+    !cardDetails.cardNumber ||
+    !cardDetails.cardExp ||
+    !cardDetails.cardSec ||
+    !cardDetails.cardHolder
+  ) {
+    errors.cardDetails = "Please check your card details.";
+  } else {
+    orderData.paid = true;
+  }
+
+  console.log(errors);
+
+  if (errors.cardDetails) {
+    console.log(errors);
+    return {
+      activeStep: prev.activeStep,
+      success: false,
+      errors,
+      orderData,
+    };
+  }
+
+  // POST TO RESERVATIONS
+
+  await patchOrder(orderData);
+  return { activeStep: prev.activeStep, success: true, errors, orderData };
 }
 
 export async function submitTicketReservation(prev, formData) {
@@ -298,7 +432,6 @@ export async function submitTicketReservation(prev, formData) {
       delete orderDetails.reservationId;
       await postOrder(orderDetails);
       revalidatePath("/");
-      redirect("/session/reservation/order-complete");
     }
   }
 }

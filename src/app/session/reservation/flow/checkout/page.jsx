@@ -1,4 +1,4 @@
-import BookingWindow from "@/components/checkout/BookingFlow";
+import BookingWindow from "@/components/checkout/BookingWindow";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import ReservationTimer from "@/components/checkout/ReservationTimer";
 import Button from "@/components/Button";
@@ -7,7 +7,7 @@ import formSteps from "@/data/formSteps";
 
 export default function Page() {
   return (
-    <main className="grid gap-x-4 grid-rows-[auto_1fr] md:grid-cols-4">
+    <main className="grid gap-x-4 grid-rows-[auto_1fr_auto] md:grid-cols-4">
       <BookingWindow />
       <OrderSummary />
     </main>
@@ -64,7 +64,7 @@ function FormStepIndicator({ activeStep, step, title }) {
 
 export function FormFooter({ activeStep, isPending }) {
   return (
-    <footer className="flex justify-center sm:justify-end gap-4 items-end">
+    <footer className="self-end flex justify-center sm:justify-end gap-4 items-end">
       {activeStep > 1 && (
         <Button
           variant="primary"

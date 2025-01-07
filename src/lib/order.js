@@ -1,14 +1,23 @@
-const endpointReservation = process.env.NEXT_PUBLIC_FOO_FEST_API_URL;
+import {
+  endpointAPI,
+  endpointOrders,
+  endpointGuests,
+  endpointKey,
+} from "./endpoints";
 
-const endpointOrders = process.env.SUPABASE_ORDERS_URL;
-const orderKey = process.env.SUPABASE_ORDERS_ANON_KEY;
+const headersList = {
+  Accept: "application/json",
+  "Content-Type": "application/json",
+  apikey: endpointKey,
+  Prefer: "return=representation",
+};
 
 import useSWR from "swr";
 import { fetcher } from "./utils";
 
 export function getCampingAreas() {
   const { data, error, isLoading } = useSWR(
-    `${endpointReservation}/available-spots`,
+    `${endpointAPI}/available-spots`,
     fetcher
   );
 
@@ -20,7 +29,7 @@ export function getCampingAreas() {
 }
 
 export async function putReservation(reservationData) {
-  const data = await fetch(`${endpointReservation}/reserve-spot`, {
+  const data = await fetch(`${endpointAPI}/reserve-spot`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(reservationData),
@@ -30,7 +39,7 @@ export async function putReservation(reservationData) {
 }
 
 export async function postReservation(reservationData) {
-  const data = await fetch(`${endpointReservation}/fullfill-reservation`, {
+  const data = await fetch(`${endpointAPI}/fullfill-reservation`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(reservationData),
@@ -38,13 +47,6 @@ export async function postReservation(reservationData) {
 
   return data;
 }
-
-const headersList = {
-  Accept: "application/json",
-  "Content-Type": "application/json",
-  apikey: orderKey,
-  Prefer: "return=representation",
-};
 
 export async function postOrder(orderData) {
   const data = await fetch(endpointOrders, {
@@ -56,8 +58,65 @@ export async function postOrder(orderData) {
   return data;
 }
 
+export async function patchOrder(orderData) {
+  const data = await fetch(
+    `${endpointOrders}?reservation_id=eq.${orderData.reservation_id}`,
+    {
+      method: "PATCH",
+      headers: headersList,
+      body: JSON.stringify(orderData),
+    }
+  ).then((res) => res.json());
+
+  return data;
+}
+
+export async function postGuests(guestData) {
+  const data = await fetch(endpointGuests, {
+    method: "POST",
+    headers: headersList,
+    body: JSON.stringify(guestData),
+  }).then((res) => res.json());
+
+  return data;
+}
+
 export async function deleteOrder(id) {
-  const data = await fetch(endpointOrders + `?reservationId=eq.${id}`, {
+  const data = await fetch(`${endpointOrders}?reservation_id=eq.${id}`, {
+    method: "DELETE",
+    headers: headersList,
+  }).then((res) => res.json());
+
+  return data;
+}
+
+export async function deleteAllUnpaid() {
+  const data = await fetch(`${endpointOrders}?paid=eq.false`, {
+    method: "GET",
+    headers: headersList,
+  }).then((res) => res.json());
+
+  data.map((order) => {
+    const id = order.reservation_id;
+    deleteGuest(id);
+  });
+
+  await deleteUnpaid();
+
+  return data;
+}
+
+async function deleteUnpaid() {
+  const data = await fetch(`${endpointOrders}?paid=eq.false`, {
+    method: "DELETE",
+    headers: headersList,
+  }).then((res) => res.json());
+
+  return data;
+}
+
+async function deleteGuest(id) {
+  const data = await fetch(`${endpointGuests}?reservation_id=eq.${id}`, {
     method: "DELETE",
     headers: headersList,
   }).then((res) => res.json());

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { getTicketQuantity } from "@/lib/utils";
+import { getTotalQuantity } from "@/lib/utils";
 
 export default function useAvailableArea(data) {
   // TICKET QUANTITY IN BASKET
-  const ticketQuantity = getTicketQuantity();
+  const ticketQuantity = getTotalQuantity("tickets");
 
   // INITIALIZING STATE
   const initialArea = data.find((obj) => obj.available > 0);

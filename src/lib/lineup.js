@@ -1,7 +1,8 @@
-const endpoint = process.env.FOO_FEST_API_URL;
+// const endpoint = process.env.FOO_FEST_API_URL;
+import { endpointAPI } from "./endpoints";
 
 export async function getArtists() {
-  const response = await fetch(`${endpoint}/bands`, {
+  const response = await fetch(`${endpointAPI}/bands`, {
     method: "GET",
   });
 
@@ -10,7 +11,7 @@ export async function getArtists() {
 }
 
 export async function getArtistBySlug(slug) {
-  const response = await fetch(`${endpoint}/bands/${slug}`, {
+  const response = await fetch(`${endpointAPI}/bands/${slug}`, {
     method: "GET",
   });
 
@@ -19,7 +20,7 @@ export async function getArtistBySlug(slug) {
 }
 
 export async function getStages() {
-  const response = await fetch(`${endpoint}/schedule`, {
+  const response = await fetch(`${endpointAPI}/schedule`, {
     method: "GET",
   });
 

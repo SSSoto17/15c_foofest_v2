@@ -12,40 +12,19 @@ import {
 import Form from "next/form";
 
 // FUNCTIONS
-import { useActionState, useEffect } from "react";
+
 import { getCampingAreas } from "@/lib/order";
 import { keyEnter } from "@/lib/utils";
 import useTicketListing from "@/hooks/useTicketListing";
 import useAvailableArea from "@/hooks/useAvailableArea";
-import { submitTickets } from "@/app/session/reservation/flow/checkout/actions";
-import { useSession } from "@/store/SessionStore";
-
-// export default function BookingStepOne({ ticketData, error, areaData }) {
-//   return (
-//     <div className="grid gap-y-10 sm:gap-y-16 p-8 sm:p-12">
-//       <SelectTickets {...ticketData} error={error} />
-//       <SelectCampingArea data={areaData} />
-//       <GreenFee />
-//     </div>
-//   );
-// }
 
 export default function BookingStepOne({
   activeStep,
-  setActiveStep,
-  ticketData,
-  error,
+  errors,
+  submit,
+  isPending,
 }) {
-  // const initState = { activeStep: 1, success: false, errors: {} };
-  const { setReservationId } = useSession();
-  const [state, submit, isPending] = useActionState(submitTickets);
   const { areas, isLoading } = getCampingAreas();
-
-  useEffect(() => {
-    if (state?.success) {
-      setReservationId(state?.orderData?.reservationId);
-    }
-  }, [state]);
 
   if (isLoading) return;
 
@@ -53,19 +32,17 @@ export default function BookingStepOne({
     <Form
       action={submit}
       onKeyDown={keyEnter}
-      className="grid gap-y-10 sm:gap-y-16 p-8 sm:p-12"
+      className="grid row-span-2 gap-y-10 sm:gap-y-16 p-8 sm:p-12"
     >
-      <SelectTickets {...ticketData} error={state?.errors} />
+      <SelectTickets error={errors} />
       <SelectCampingArea data={areas} />
       <GreenFee />
       <FormFooter activeStep={activeStep} isPending={isPending} />
     </Form>
-    // <FormTemplate action={submitStepOne} {...state?.orderData}>
-    // </FormTemplate>
   );
 }
 
-function SelectTickets({ partoutGuests, vipGuests, error }) {
+function SelectTickets({ error }) {
   const ticketListing = useTicketListing(error);
 
   return (

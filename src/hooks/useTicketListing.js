@@ -1,12 +1,11 @@
-import { getTicketQuantity } from "@/lib/utils";
+import { getTotalQuantity } from "@/lib/utils";
 import { useTickets } from "@/store/TicketStore";
 import { useTicketActions } from "@/store/TicketStore";
 
 export default function useTicketListing(error) {
-  // const ticketQuantity = partoutGuests?.length + vipGuests?.length;
   const { partoutTickets, vipTickets } = useTickets();
   const { setPartout, setVip } = useTicketActions();
-  const totalTickets = getTicketQuantity();
+  const totalTickets = getTotalQuantity("tickets");
 
   const ticketListing = [
     {

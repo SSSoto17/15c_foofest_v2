@@ -19,7 +19,7 @@ export default function ReservationTimer() {
 
 async function deleteReservation(id) {
   const data = await fetch(
-    `https://iozsjcgncadtminziwkq.supabase.co/rest/v1/reservations?reservationId=eq.${id}`,
+    `https://iozsjcgncadtminziwkq.supabase.co/rest/v1/reservations?reservation_id=eq.${id}`,
     {
       method: "DELETE",
       headers: {

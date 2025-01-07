@@ -1,19 +1,136 @@
 "use client";
 
-import EnterGuestInfo from "./form-sections/GuestInfo";
-import { TentSetup } from "./FormSections";
+import Form from "next/form";
+import Image from "next/image";
 
-export default function BookingStepTwo() {
+import { Fieldset, Legend } from "@headlessui/react";
+import {
+  QuantitySelector,
+  TextInput,
+  CheckField,
+  ErrorText,
+} from "@/components/checkout/FormFields";
+import Accordion from "../Accordion";
+import { FormFooter } from "@/app/session/reservation/flow/checkout/page";
+import { keyEnter } from "@/lib/utils";
+
+import vipStamp from "@/assets/svg/vip.svg";
+import useTentListing from "@/hooks/useTentListing";
+
+export default function BookingStepTwo({
+  submit,
+  activeStep,
+  isPending,
+  errors,
+  tickets,
+}) {
   return (
     <Form
       action={submit}
       onKeyDown={keyEnter}
-      className="grid gap-y-10 sm:gap-y-16 p-8 sm:p-12"
+      className="grid row-span-2 gap-y-10 sm:gap-y-16 p-8 sm:p-12"
     >
-      {/* <EnterGuestInfo /> */}
-      {/* <TentSetup /> */}
-
-      <FormFooter />
+      <EnterGuestData tickets={tickets} error={errors} />
+      <SelectTents error={errors} />
+      <FormFooter activeStep={activeStep} isPending={isPending} />
     </Form>
+  );
+}
+
+function EnterGuestData({ tickets, error }) {
+  return (
+    <section
+      className={`grid ${tickets.length > 1 && "md:grid-cols-2"} gap-4 w-full`}
+    >
+      <header className="col-span-full grid gap-2">
+        <h2 className="heading-5">Ticket Information</h2>
+        <ErrorText>
+          {error?.ticketGuestsName || error?.ticketGuestsEmail}
+        </ErrorText>
+      </header>
+      {tickets.map((guest, id) => {
+        return (
+          <TicketGuestCard
+            key={id}
+            // data={guest}
+            {...guest}
+            number={id + 1}
+            single={tickets.length === 1}
+            error={error}
+          />
+        );
+      })}
+    </section>
+  );
+}
+
+function TicketGuestCard({ data, name, email, vip, number, single, error }) {
+  const checkboxData = { name: "isBuyer" };
+  return (
+    <>
+      <Fieldset className="grid gap-y-6 max-w-md grow shrink">
+        <Legend className="heading-6 font-semibold capitalize flex gap-4">
+          Ticket #{number}
+        </Legend>
+        <div
+          className={`grid gap-y-4 border p-6 md:p-8 pt-4 relative ${
+            (error?.ticketGuestsName && !data?.name) ||
+            (error?.ticketGuestsEmail && !data?.email)
+              ? "border-border-global--error/35"
+              : "border-border-input"
+          }`}
+        >
+          {vip && (
+            <Image
+              src={vipStamp}
+              alt="VIP Ticket"
+              className="absolute right-6 -top-6"
+            />
+          )}
+          <TextInput
+            name={name}
+            error={error?.ticketGuestsName}
+            defaultValue={data?.name}
+            type="text"
+            variant="slim"
+          >
+            Name
+          </TextInput>
+          <TextInput
+            name={email}
+            error={error?.ticketGuestsEmail}
+            defaultValue={data?.email}
+            type="email"
+            variant="slim"
+          >
+            Email
+          </TextInput>
+        </div>
+        {single && (
+          <CheckField data={checkboxData} minor>
+            Are you buying this ticket for yourself?
+          </CheckField>
+        )}
+      </Fieldset>
+    </>
+  );
+}
+
+function SelectTents({ error }) {
+  const tentListing = useTentListing(error);
+
+  return (
+    <Accordion label="Tent Setup" variant="secondary">
+      <Fieldset className="grid gap-y-3 ml-12">
+        <ErrorText>{error?.tentSetup}</ErrorText>
+        {tentListing.map((tent, id) => {
+          return (
+            <QuantitySelector key={id} data={tent}>
+              {tent.label}
+            </QuantitySelector>
+          );
+        })}
+      </Fieldset>
+    </Accordion>
   );
 }
