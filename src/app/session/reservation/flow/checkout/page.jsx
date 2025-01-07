@@ -65,7 +65,7 @@ function FormStepIndicator({ activeStep, step, title }) {
 export function FormFooter({ activeStep, isPending }) {
   return (
     <footer className="self-end flex justify-center sm:justify-end gap-4 items-end">
-      {activeStep > 1 && (
+      {/* {activeStep > 1 && (
         <Button
           variant="primary"
           size="base"
@@ -74,7 +74,7 @@ export function FormFooter({ activeStep, isPending }) {
         >
           Back
         </Button>
-      )}
+      )} */}
       <Button variant="primary" size="base" isDisabled={isPending}>
         {activeStep === 3 ? "Purchase" : "Next"}
       </Button>
