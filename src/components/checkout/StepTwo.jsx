@@ -44,7 +44,6 @@ function EnterGuestData({ keys, data, error }) {
     >
       <header className="col-span-full grid gap-2">
         <h2 className="heading-5">Ticket Information</h2>
-        {/* <ErrorText>{error?.name || error?.email}</ErrorText> */}
       </header>
       {keys.map((key, id) => {
         return (
@@ -94,7 +93,7 @@ function TicketGuestCard({
           )}
           <TextInput
             name={keyName}
-            error={error?.name}
+            error={error?.name && !data?.name ? error?.name : null}
             defaultValue={data?.name}
             type="text"
             variant="slim"
@@ -103,7 +102,7 @@ function TicketGuestCard({
           </TextInput>
           <TextInput
             name={keyEmail}
-            error={error?.email}
+            error={error?.email && !data?.email ? error?.email : null}
             defaultValue={data?.email}
             type="email"
             variant="slim"
