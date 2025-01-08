@@ -142,6 +142,7 @@ async function submitStepTwo(prev, formData) {
 
   tentSpaces.double = formData.get("tentDouble") * 2;
   tentSpaces.triple = formData.get("tentTriple") * 3;
+  tentSpaces.total = tentSpaces.double + tentSpaces.triple;
 
   orderData.optional_tent_setup = {
     tent_double: formData.get("tentDouble"),
@@ -166,7 +167,16 @@ async function submitStepTwo(prev, formData) {
     }
   });
 
-  if (errors.guests) {
+  if (guests.length > 1 && tentSpaces.total) {
+    if (guests.length < tentSpaces.total) {
+      errors.tentSetup = "Please fill up all available tent space.";
+    }
+    if (guests.length > tentSpaces.total) {
+      errors.tentSetup = "Please ensure room for all guests.";
+    }
+  }
+
+  if (errors.guests || errors.tentSetup) {
     return {
       activeStep: prev.activeStep,
       success: false,
