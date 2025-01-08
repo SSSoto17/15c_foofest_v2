@@ -8,7 +8,6 @@ import {
   RadioGroup,
   Radio,
 } from "@headlessui/react";
-import { FaRegQuestionCircle } from "react-icons/fa";
 import {
   MdOutlineAdd,
   MdOutlineRemove,
@@ -16,6 +15,7 @@ import {
   MdOutlineError,
   MdOutlineCheck,
 } from "react-icons/md";
+import { FaRegQuestionCircle } from "react-icons/fa";
 
 // FUNCTIONS
 import { useState, useEffect } from "react";
@@ -237,9 +237,7 @@ export function TextInput({
 export function ErrorText({ retainHeight, children }) {
   return (
     <small
-      className={`body-copy-small text-text-global--action italic ${
-        retainHeight && "h-6"
-      }`}
+      className={`body-copy-small text-red-200 italic ${retainHeight && "h-6"}`}
     >
       {children}
     </small>

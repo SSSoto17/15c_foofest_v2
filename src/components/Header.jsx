@@ -10,6 +10,8 @@ import {
   Description,
 } from "@headlessui/react";
 import { useState } from "react";
+import { deleteUnpaid } from "@/lib/order";
+import { redirect } from "next/navigation";
 
 export default function Header({ linksActive }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +28,6 @@ export default function Header({ linksActive }) {
             <Image src={logo} alt="FooFest" className="h-16 w-fit" />
           </Link>
         ) : (
-          // <p>test</p>
           <WarningEscape />
         )}
         {linksActive && (
@@ -128,6 +129,11 @@ function MobileNavIcon({ setIsOpen, isOpen }) {
 function WarningEscape() {
   const [isOpen, setIsOpen] = useState(false);
 
+  const handleExit = async () => {
+    await deleteUnpaid();
+    redirect("/");
+  };
+
   return (
     <>
       <button onClick={() => setIsOpen(true)} className="cursor-pointer">
@@ -158,12 +164,12 @@ function WarningEscape() {
               >
                 Cancel
               </button>
-              <Link
-                href="/"
-                className="grow flex place-content-center bg-rose-600 p-2 rounded-sm font-semibold max-w-40"
+              <button
+                onClick={handleExit}
+                className="grow cursor-pointer bg-rose-600 p-2 rounded-sm font-semibold max-w-40"
               >
                 Exit
-              </Link>
+              </button>
             </div>
           </DialogPanel>
         </div>

@@ -30,32 +30,30 @@ export default function BookingStepTwo({
       onKeyDown={keyEnter}
       className="grid row-span-2 gap-y-10 sm:gap-y-16 p-8 sm:p-12"
     >
-      <EnterGuestData tickets={tickets} error={errors} />
+      <EnterGuestData {...tickets} error={errors?.guests} />
       <SelectTents error={errors} />
       <FormFooter activeStep={activeStep} isPending={isPending} />
     </Form>
   );
 }
 
-function EnterGuestData({ tickets, error }) {
+function EnterGuestData({ keys, data, error }) {
   return (
     <section
-      className={`grid ${tickets.length > 1 && "md:grid-cols-2"} gap-4 w-full`}
+      className={`grid ${keys.length > 1 && "md:grid-cols-2"} gap-4 w-full`}
     >
       <header className="col-span-full grid gap-2">
         <h2 className="heading-5">Ticket Information</h2>
-        <ErrorText>
-          {error?.ticketGuestsName || error?.ticketGuestsEmail}
-        </ErrorText>
+        {/* <ErrorText>{error?.name || error?.email}</ErrorText> */}
       </header>
-      {tickets.map((guest, id) => {
+      {keys.map((key, id) => {
         return (
           <TicketGuestCard
             key={id}
-            // data={guest}
-            {...guest}
+            {...key}
+            data={data && data[id]}
             number={id + 1}
-            single={tickets.length === 1}
+            single={keys.length === 1}
             error={error}
           />
         );
@@ -64,7 +62,15 @@ function EnterGuestData({ tickets, error }) {
   );
 }
 
-function TicketGuestCard({ data, name, email, vip, number, single, error }) {
+function TicketGuestCard({
+  keyName,
+  keyEmail,
+  vip,
+  data,
+  number,
+  single,
+  error,
+}) {
   const checkboxData = { name: "isBuyer" };
   return (
     <>
@@ -74,8 +80,7 @@ function TicketGuestCard({ data, name, email, vip, number, single, error }) {
         </Legend>
         <div
           className={`grid gap-y-4 border p-6 md:p-8 pt-4 relative ${
-            (error?.ticketGuestsName && !data?.name) ||
-            (error?.ticketGuestsEmail && !data?.email)
+            (error?.name && !data?.name) || (error?.email && !data?.email)
               ? "border-border-global--error/35"
               : "border-border-input"
           }`}
@@ -88,8 +93,8 @@ function TicketGuestCard({ data, name, email, vip, number, single, error }) {
             />
           )}
           <TextInput
-            name={name}
-            error={error?.ticketGuestsName}
+            name={keyName}
+            error={error?.name}
             defaultValue={data?.name}
             type="text"
             variant="slim"
@@ -97,8 +102,8 @@ function TicketGuestCard({ data, name, email, vip, number, single, error }) {
             Name
           </TextInput>
           <TextInput
-            name={email}
-            error={error?.ticketGuestsEmail}
+            name={keyEmail}
+            error={error?.email}
             defaultValue={data?.email}
             type="email"
             variant="slim"

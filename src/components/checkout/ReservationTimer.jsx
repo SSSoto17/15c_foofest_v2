@@ -3,7 +3,7 @@
 // FUNCTIONS
 import { redirect } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { useSession } from "@/store/SessionStore";
+import { deleteUnpaid } from "@/lib/order";
 
 // RESERVATION COUNTDOWN
 export default function ReservationTimer() {
@@ -17,28 +17,9 @@ export default function ReservationTimer() {
   );
 }
 
-async function deleteReservation(id) {
-  const data = await fetch(
-    `https://iozsjcgncadtminziwkq.supabase.co/rest/v1/reservations?reservation_id=eq.${id}`,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        apikey:
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvenNqY2duY2FkdG1pbnppd2txIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQzMDI2NzQsImV4cCI6MjA0OTg3ODY3NH0.fAOsU-bNbtRROxqdAAbGYL4Lva-N1JJ7aSIsq7Dt2p4",
-        Prefer: "return=representation",
-      },
-    }
-  ).then((res) => res.json());
-
-  return data;
-}
-
 function CountDown({ seconds }) {
   const [countdown, setCountdown] = useState(seconds);
   const timerID = useRef();
-  const { reservationId } = useSession();
 
   useEffect(() => {
     timerID.current = setInterval(() => {
@@ -49,7 +30,10 @@ function CountDown({ seconds }) {
 
   useEffect(() => {
     if (countdown <= 1) {
-      deleteReservation(reservationId);
+      const cancelReservation = async () => {
+        await deleteUnpaid();
+      };
+      cancelReservation();
       clearInterval(timerID);
       redirect("/session/timeout");
     }

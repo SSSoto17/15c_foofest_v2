@@ -81,42 +81,8 @@ export async function postGuests(guestData) {
   return data;
 }
 
-export async function deleteOrder(id) {
-  const data = await fetch(`${endpointOrders}?reservation_id=eq.${id}`, {
-    method: "DELETE",
-    headers: headersList,
-  }).then((res) => res.json());
-
-  return data;
-}
-
-export async function deleteAllUnpaid() {
+export async function deleteUnpaid() {
   const data = await fetch(`${endpointOrders}?paid=eq.false`, {
-    method: "GET",
-    headers: headersList,
-  }).then((res) => res.json());
-
-  data.map((order) => {
-    const id = order.reservation_id;
-    deleteGuest(id);
-  });
-
-  await deleteUnpaid();
-
-  return data;
-}
-
-async function deleteUnpaid() {
-  const data = await fetch(`${endpointOrders}?paid=eq.false`, {
-    method: "DELETE",
-    headers: headersList,
-  }).then((res) => res.json());
-
-  return data;
-}
-
-async function deleteGuest(id) {
-  const data = await fetch(`${endpointGuests}?reservation_id=eq.${id}`, {
     method: "DELETE",
     headers: headersList,
   }).then((res) => res.json());

@@ -10,14 +10,14 @@ import { FormHeader } from "@/app/session/reservation/flow/checkout/page";
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSessionActions } from "@/store/SessionStore";
-import { submitTickets } from "@/app/session/reservation/flow/checkout/actions";
+import { submitOrder } from "@/app/session/reservation/flow/checkout/actions";
 import { useOrderActions } from "@/store/orderStore";
 
 export default function BookingWindow() {
   const router = useRouter();
 
   const initState = { activeStep: 1, success: false, errors: {} };
-  const [state, submit, isPending] = useActionState(submitTickets, initState);
+  const [state, submit, isPending] = useActionState(submitOrder, initState);
   const { setActiveStep, setReservationId } = useSessionActions();
   const { setOrderData } = useOrderActions();
 

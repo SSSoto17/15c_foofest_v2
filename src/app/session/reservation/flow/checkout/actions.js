@@ -6,10 +6,11 @@ import {
   postReservation,
   postOrder,
   patchOrder,
+  postGuests,
+  deleteUnpaid,
 } from "@/lib/order";
-import { newGuest } from "@/lib/utils";
 
-export async function submitTickets(prev, formData) {
+export async function submitOrder(prev, formData) {
   // BOOKING FLOW || STEP ONE
   if (prev.activeStep === 1) {
     const stepOne = await submitStepOne(prev, formData);
@@ -27,6 +28,7 @@ export async function submitTickets(prev, formData) {
   // BOOKING FLOW || STEP THREE
   if (prev.activeStep === 3) {
     const stepThree = await submitStepThree(prev, formData);
+    await deleteUnpaid();
     return { ...stepThree };
   }
 }
@@ -38,16 +40,16 @@ async function submitStepOne(prev, formData) {
   const vipQuantity = Number(formData.get("vip"));
 
   const partoutTickets = Array(partoutQuantity).fill({
-    name: "partoutName",
-    email: "partoutEmail",
+    keyName: "partoutName",
+    keyEmail: "partoutEmail",
   });
   const vipTickets = Array(vipQuantity).fill({
-    name: "vipName",
-    email: "vipEmail",
+    keyName: "vipName",
+    keyEmail: "vipEmail",
     vip: true,
   });
 
-  const tickets = [...partoutTickets, ...vipTickets];
+  const tickets = { keys: [...partoutTickets, ...vipTickets] };
 
   // PREPARE RESERVATION
   const reservationData = {};
@@ -95,14 +97,15 @@ async function submitStepOne(prev, formData) {
 
 // BOOKING FLOW || STEP TWO
 async function submitStepTwo(prev, formData) {
-  const errors = {};
-
   // LINK GUESTS TO RESERVATION
   const reservationId = prev.orderData.reservation_id;
   // IS BUYER GUEST?
+  const customerData = {};
   const isBuyer = formData.get("isBuyer");
 
   // COLLECT GUEST DATA
+  let guests = [];
+
   const names = [
     ...formData.getAll("partoutName"),
     ...formData.getAll("vipName"),
@@ -116,29 +119,70 @@ async function submitStepTwo(prev, formData) {
     ...Array(formData.getAll("vipName").length).fill(true),
   ];
 
+  names.map((str, id) => {
+    const guest = {};
+
+    guest.reservation_id = reservationId;
+    guest.name = str;
+    guest.email = emails[id];
+    guest.vip = vip[id];
+
+    guests = [...guests, guest];
+
+    if (isBuyer) {
+      customerData.name = str;
+      customerData.email = emails[id];
+    }
+  });
+
+  const orderData = { ...prev.orderData, ...customerData };
+
   // COLLECT TENT ADDONS
   const tentSpaces = {};
 
   tentSpaces.double = formData.get("tentDouble") * 2;
   tentSpaces.triple = formData.get("tentTriple") * 3;
 
-  // FORM VALIDATION
-
-  // POST TO GUESTS DATABASE
-  const { name, email } = newGuest(names, emails, vip, reservationId, isBuyer);
-
-  // POST TO RESERVATIONS DATABASE
-  const orderData = { ...prev.orderData, name, email };
-  console.log(orderData);
   orderData.optional_tent_setup = {
     tent_double: formData.get("tentDouble"),
     tent_triple: formData.get("tentTriple"),
   };
 
+  // FORM VALIDATION
+  const errors = {};
+
+  guests.map(({ name, email }) => {
+    if (!name || name.length <= 1) {
+      errors.guests = {
+        ...errors.guests,
+        name: "Please provide the name of each guest.",
+      };
+    }
+    if (!email || !email.includes(".")) {
+      errors.guests = {
+        ...errors.guests,
+        email: "Please provide the email of each guest.",
+      };
+    }
+  });
+
+  if (errors.guests) {
+    return {
+      activeStep: prev.activeStep,
+      success: false,
+      errors,
+      orderData: prev.orderData,
+      tickets: { ...prev.tickets, data: guests },
+    };
+  }
+
+  // POST TO GUESTS DATABASE
+  await postGuests(guests);
+
+  // POST TO RESERVATIONS DATABASE
   await patchOrder(orderData);
 
   // NEXT STEP
-
   return {
     success: false,
     errors: {},
