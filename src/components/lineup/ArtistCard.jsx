@@ -5,6 +5,7 @@ import picture from "../../assets/tester/terminalist.jpg";
 // import picture from "../../assets/tester/Tool_logo_2006.svg";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { endpointAPI } from "@/lib/endpoints";
 
 const ArtistCard = ({ name, slug, logo }) => {
   // console.log("slug:", slug);
