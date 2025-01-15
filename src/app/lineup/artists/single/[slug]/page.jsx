@@ -2,14 +2,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { MdOutlineArrowBack } from "react-icons/md";
 import { getArtistBySlug } from "@/lib/lineup";
+import { endpointAPI } from "@/lib/endpoints";
 
 import picture from "@/assets/tester/terminalist.jpg";
-const endpoint = process.env.NEXT_PUBLIC_FOO_FEST_API_URL;
 
 export default async function ArtistSingle({ params }) {
-  const slug = await params;
-  const artist = await getArtistBySlug(slug.slug);
-  const artistImg = artist.logo.startsWith("https://") ? artist.logo : `${endpoint}/logos/${artist.logo}`;
+  const { slug } = await params;
+  const artist = await getArtistBySlug(slug);
+  const img = artist.logo.startsWith("https://")
+    ? artist.logo
+    : `${endpointAPI}/logos/${artist.logo}`;
 
   return (
     <main className="my-8">
@@ -24,8 +26,18 @@ export default async function ArtistSingle({ params }) {
 
       <section className="grid md:grid-cols-2 gap-10">
         <div>
-          <Image src={picture} alt={`Image of ${artist.name}`} width={400} height={400} className="h-full w-full object-cover"></Image>
-          {artist.logoCredits && <small className="mt-2 inline-block body-copy-small text-aztec-300">Photo by Johan von Bülow</small>}
+          <Image
+            src={img}
+            alt={`Image of ${artist.name}`}
+            width={400}
+            height={400}
+            className="h-full w-full object-cover"
+          ></Image>
+          {artist.logoCredits && (
+            <small className="mt-2 inline-block body-copy-small text-aztec-300">
+              Photo by Johan von Bülow
+            </small>
+          )}
         </div>
         <article className=" pb-8">
           <h1 className="heading-tagline px-4 py-2 border-2 inline-block">

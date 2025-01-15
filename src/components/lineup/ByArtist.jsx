@@ -25,7 +25,7 @@ const ByArtist = ({ artists }) => {
       <ul className="grid grid-cols-[repeat(auto-fill,_minmax(250px,_1fr))] gap-4">
         {artistsSortedByName.map((artist, i) => (
           // console.log("ARTIST:", artist.slug)
-          <ArtistCard key={i} name={artist.name} slug={artist.slug} img={artist.logo.startsWith("https://") ? artist.logo : `${endpoint}/logos/${artist.logo}`}></ArtistCard>
+          <ArtistCard key={i} {...artist} />
         ))}
       </ul>
       <ScrollToButton scrollFromTop="0" simple={false}>
