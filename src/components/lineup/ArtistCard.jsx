@@ -1,8 +1,10 @@
+"use client";
 import Image from "next/image";
 // import picture from "../../assets/tester/A_Perfect_Circle_Logo_2011_-_Michael_John_Stinsman_InvisibleStudio_Productions.png";
 import picture from "../../assets/tester/terminalist.jpg";
 // import picture from "../../assets/tester/Tool_logo_2006.svg";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const ArtistCard = ({ name, slug, logo }) => {
   // console.log("slug:", slug);
